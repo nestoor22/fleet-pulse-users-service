@@ -1,0 +1,212 @@
+run:
+  timeout: 5m
+  issues-exit-code: 1
+  tests: true
+  skip-dirs:
+    - vendor
+    - docs
+    - .git
+  skip-files:
+    - ".*_test.go"  # Skip some test files if needed
+    - ".*\\.pb\\.go$"  # Skip protobuf files
+
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+
+linters-settings:
+  # Error handling
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+    exclude-functions:
+      - io/ioutil.ReadFile
+      - io.Copy(*bytes.Buffer)
+      - io.Copy(os.Stdout)
+
+  # Code complexity
+  gocyclo:
+    min-complexity: 15
+
+  # Function length
+  funlen:
+    lines: 80
+    statements: 50
+
+  # Line length
+  lll:
+    line-length: 120
+
+  # Cognitive complexity
+  gocognit:
+    min-complexity: 20
+
+  # Unused code
+  unused:
+    check-exported: false
+
+  # Ineffective assignments
+  ineffassign:
+    check-exported: false
+
+  # Dead code
+  deadcode:
+    test: true
+
+  # Variable declarations
+  varcheck:
+    check-exported: false
+
+  # Struct tag format
+  govet:
+    check-shadowing: true
+    settings:
+      printf:
+        funcs:
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+
+  # Import order and grouping
+  goimports:
+    local-prefixes: fleet-pulse-users-service
+
+  # Security issues
+  gosec:
+    severity: medium
+    confidence: medium
+    excludes:
+      - G404 # Random number generator
+      - G501 # Import blacklist: crypto/md5
+
+  # Naming conventions
+  revive:
+    min-confidence: 0
+    rules:
+      - name: exported
+        severity: warning
+        disabled: false
+      - name: var-naming
+        severity: warning
+        disabled: false
+        arguments:
+          - ["ID"] # Allow ID instead of Id
+      - name: package-comments
+        severity: warning
+        disabled: false
+
+  # Code duplication
+  dupl:
+    threshold: 150
+
+  # Magic numbers
+  gomnd:
+    settings:
+      mnd:
+        checks: [argument, case, condition, operation, return, assign]
+        ignored-numbers: [0, 1, 2, 3]
+        ignored-functions: [math.*, http.StatusText, make]
+
+  # Interface size
+  interfacer:
+    max-methods: 10
+
+  # SQL linting (if using raw SQL)
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - dupImport
+      - ifElseChain
+      - octalLiteral
+      - whyNoLint
+      - wrapperFunc
+
+linters:
+  enable:
+    # Error checking
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - typecheck
+
+    # Code quality
+    - gocyclo
+    - gofmt
+    - goimports
+    - golint
+    - goconst
+    - gocognit
+    - funlen
+    - lll
+    - misspell
+    - unparam
+
+    # Security
+    - gosec
+
+    # Style
+    - revive
+    - stylecheck
+    - whitespace
+    - wsl
+
+    # Performance
+    - prealloc
+
+    # Bugs
+    - bodyclose
+    - dupl
+    - gocritic
+    - gomnd
+    - interfacer
+    - maligned
+    - scopelint
+
+  disable:
+    - deadcode  # Deprecated in favor of unused
+    - varcheck  # Deprecated in favor of unused
+    - structcheck  # Deprecated in favor of unused
+
+issues:
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - gomnd
+        - funlen
+        - goconst
+        - gocyclo
+        - dupl
+
+    # Exclude gosec from test files
+    - path: _test\.go
+      linters:
+        - gosec
+
+    # Exclude some staticcheck messages
+    - linters:
+        - staticcheck
+      text: "SA9003:"
+
+    # Exclude lll issues for long lines with go:generate
+    - linters:
+        - lll
+      source: "^//go:generate "
+
+  # Maximum issues count per one linter
+  max-issues-per-linter: 0
+  # Maximum count of issues with the same text
+  max-same-issues: 0
+
+  # Show only new issues created after git revision `REV`
+  # new-from-rev: REV
