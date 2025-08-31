@@ -1,0 +1,271 @@
+basePath: /v1
+definitions:
+  api.Health:
+    properties:
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  api.HealthResponse:
+    properties:
+      checks:
+        additionalProperties:
+          $ref: '#/definitions/api.Health'
+        type: object
+      service:
+        type: string
+      status:
+        type: string
+      timestamp:
+        type: string
+      version:
+        type: string
+    type: object
+  schemas.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    type: object
+  schemas.ErrorResponse:
+    properties:
+      error:
+        example: user with such email already exists
+        type: string
+    type: object
+  schemas.LoginResponse:
+    properties:
+      refreshToken:
+        example: eyJhbGciOiJI
+        type: string
+      token:
+        example: eyJhbGciOiJI...
+        type: string
+    type: object
+  schemas.LoginUserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  schemas.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  schemas.UserResponse:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+    type: object
+host: localhost:8000
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+  description: API for users, authentication, and refresh tokens
+  termsOfService: http://swagger.io/terms/
+  title: Fleet Pulse Users Service API
+  version: "1.0"
+paths:
+  /health:
+    get:
+      description: Check the health status of the service and its dependencies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.HealthResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/api.HealthResponse'
+      summary: Health check endpoint
+      tags:
+      - health
+  /live:
+    get:
+      description: Check if the service is alive and running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.HealthResponse'
+      summary: Liveness check endpoint
+      tags:
+      - health
+  /ready:
+    get:
+      description: Check if the service is ready to accept requests
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.HealthResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/api.HealthResponse'
+      summary: Readiness check endpoint
+      tags:
+      - health
+  /v1/login:
+    post:
+      consumes:
+      - application/json
+      description: Login User
+      parameters:
+      - description: Login Data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.LoginUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+      summary: Login User
+      tags:
+      - Auth
+  /v1/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh Access Token using a valid refresh token
+      parameters:
+      - description: Refresh Token
+        in: body
+        name: token
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+      summary: Refresh Access Token
+      tags:
+      - Auth
+  /v1/users:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/schemas.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - Users
+  /v1/users/current:
+    get:
+      description: Get information about the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+      security:
+      - Bearer: []
+      summary: Get Current User
+      tags:
+      - Users
+securityDefinitions:
+  Bearer:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
