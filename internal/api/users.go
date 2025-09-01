@@ -1,9 +1,9 @@
 package api
 
 import (
+	"fleet-pulse-users-service/internal"
 	"fleet-pulse-users-service/internal/errors"
 	"fleet-pulse-users-service/internal/middlewares"
-	"fleet-pulse-users-service/internal/repositories"
 	"fleet-pulse-users-service/internal/schemas"
 	"fleet-pulse-users-service/internal/services"
 	"net/http"
@@ -25,28 +25,28 @@ import (
 // @Failure 409 {object} schemas.ErrorResponse
 // @Failure 500 {object} schemas.ErrorResponse
 // @Router /v1/users [post]
-func RegisterUserHandler(userService *services.UserService) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
+func RegisterUserHandler(userServiceConstructor func(db *gorm.DB) *services.UserService) func(c *gin.Context, tx *gorm.DB) {
+	return func(c *gin.Context, tx *gorm.DB) {
 		var req schemas.CreateUserRequest
-		if err := ctx.ShouldBindJSON(&req); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
+		userService := userServiceConstructor(tx)
 		createdUser, err := userService.RegisterNewUser(req)
 		if err != nil {
-			errors.HandleUserErrors(ctx, err)
+			errors.HandleUserErrors(c, err)
+			c.Error(err)
 			return
 		}
-		ctx.JSON(
-			http.StatusCreated,
-			schemas.UserResponse{
-				ID:        createdUser.ID,
-				Email:     createdUser.Email,
-				FirstName: createdUser.FirstName,
-				LastName:  createdUser.LastName,
-			},
-		)
+
+		c.JSON(http.StatusCreated, schemas.UserResponse{
+			ID:        createdUser.ID,
+			Email:     createdUser.Email,
+			FirstName: createdUser.FirstName,
+			LastName:  createdUser.LastName,
+		})
 	}
 }
 
@@ -60,19 +60,21 @@ func RegisterUserHandler(userService *services.UserService) gin.HandlerFunc {
 // @Failure 404 {object} schemas.ErrorResponse
 // @Router /v1/users/current [get]
 // @Security Bearer
-func GetCurrentUserHandler(userService *services.UserService) gin.HandlerFunc {
-	return func(c *gin.Context) {
+func GetCurrentUserHandler(userServiceConstructor func(db *gorm.DB) *services.UserService) func(c *gin.Context, tx *gorm.DB) {
+	return func(c *gin.Context, tx *gorm.DB) {
 		userID, exists := c.Get("current_user_id")
 		if !exists {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return
 		}
+
 		userUUID, err := uuid.Parse(userID.(string))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
 			return
 		}
 
+		userService := userServiceConstructor(tx)
 		user, err := userService.GetUserById(userUUID)
 		if err != nil || user == nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
@@ -88,16 +90,59 @@ func GetCurrentUserHandler(userService *services.UserService) gin.HandlerFunc {
 	}
 }
 
-func AddUserRoutes(router *gin.RouterGroup, db *gorm.DB) *gin.RouterGroup {
-	userRepo := repositories.NewUserRepository(db)
-	refreshTokenRepo := repositories.NewRefreshTokenRepository(db)
-	userService := services.NewUserService(userRepo)
-	authService := services.NewAuthService(refreshTokenRepo, userRepo)
+// AcceptInviteHandler godoc
+// @Summary Accept user invite
+// @Description Accept an invite and set password
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param accept body schemas.AcceptInviteRequest true "Accept invite request"
+// @Success 200 {object} schemas.UserResponse
+// @Failure 400 {object} schemas.ErrorResponse
+// @Failure 404 {object} schemas.ErrorResponse
+// @Failure 500 {object} schemas.ErrorResponse
+// @Router /v1/users/invite/accept [post]
+func AcceptInviteHandler(userServiceConstructor func(db *gorm.DB) *services.UserService) func(c *gin.Context, tx *gorm.DB) {
+	return func(c *gin.Context, tx *gorm.DB) {
+		var req schemas.AcceptInviteRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 
-	router.POST("/users", RegisterUserHandler(userService))
-	router.GET("/users/current",
-		middlewares.JWTAuthMiddleware(authService),
-		GetCurrentUserHandler(userService),
+		userService := userServiceConstructor(tx)
+		user, err := userService.AcceptInvite(req.Token, req.Password)
+		if err != nil {
+			errors.HandleUserErrors(c, err)
+			return
+		}
+
+		c.JSON(http.StatusOK, schemas.UserResponse{
+			ID:        user.ID,
+			Email:     user.Email,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+		})
+	}
+}
+
+func AddUserRoutes(router *gin.RouterGroup, db *gorm.DB) *gin.RouterGroup {
+	userServiceConstructor := func(db *gorm.DB) *services.UserService {
+		return services.NewUserService(db)
+	}
+
+	router.POST("/users",
+		internal.TransactionalHandler(db, RegisterUserHandler(userServiceConstructor)),
 	)
+
+	router.GET("/users/current",
+		middlewares.JWTAuthMiddleware(services.NewAuthService(db)),
+		internal.TransactionalHandler(db, GetCurrentUserHandler(userServiceConstructor)),
+	)
+
+	router.POST("/users/invite/accept",
+		internal.TransactionalHandler(db, AcceptInviteHandler(userServiceConstructor)),
+	)
+
 	return router
 }

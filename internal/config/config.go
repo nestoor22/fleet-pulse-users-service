@@ -31,6 +31,8 @@ type AuthConfig struct {
 	JwtSecret                     string
 	JwtAccessTokenExpireInMinutes int
 	JwtRefreshTokenExpireInHours  int
+	InviteSecret                  string
+	InviteExpireInMinutes         int
 }
 
 var (
@@ -74,6 +76,8 @@ func load() *Config {
 			JwtSecret:                     getEnv("JWT_SECRET", ""),
 			JwtAccessTokenExpireInMinutes: jwtAccessTokenExpire,
 			JwtRefreshTokenExpireInHours:  jwtRefreshTokenExpire,
+			InviteSecret:                  getEnv("INVITE_SECRET", ""),
+			InviteExpireInMinutes:         60,
 		},
 	}
 }

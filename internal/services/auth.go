@@ -14,6 +14,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 var jwtSecret = []byte(config.Get().Auth.JwtSecret)
@@ -29,8 +30,10 @@ type AuthService struct {
 	userRepository         *repositories.UserRepository
 }
 
-func NewAuthService(refreshTokenRepository *repositories.RefreshTokenRepository, userRepository *repositories.UserRepository) *AuthService {
-	return &AuthService{refreshTokenRepository: refreshTokenRepository, userRepository: userRepository}
+func NewAuthService(db *gorm.DB) *AuthService {
+	userRepo := repositories.NewUserRepository(db)
+	refreshTokenRepository := repositories.NewRefreshTokenRepository(db)
+	return &AuthService{refreshTokenRepository: refreshTokenRepository, userRepository: userRepo}
 }
 
 func (s AuthService) GenerateJWT(userID string, duration time.Duration) (string, error) {
@@ -80,6 +83,9 @@ func CheckPassword(hashedPassword, password string) bool {
 }
 
 func (s AuthService) LoginUser(loginPayload schemas.LoginUserRequest) (string, string, error) {
+	if loginPayload.Email == "" || loginPayload.Password == "" {
+		return "", "", errors.ErrInvalidCredentials
+	}
 	userObj, err := s.userRepository.GetUserByEmail(loginPayload.Email)
 	settings := config.Get()
 
