@@ -6,7 +6,6 @@ import (
 	"fleet-pulse-users-service/internal/middlewares"
 	"fleet-pulse-users-service/internal/schemas"
 	"fleet-pulse-users-service/internal/services"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -36,7 +35,6 @@ func RegisterUserHandler(userServiceConstructor func(db *gorm.DB) *services.User
 
 		userService := userServiceConstructor(tx)
 		createdUser, err := userService.RegisterNewUser(req)
-		fmt.Print(err)
 		if err != nil {
 			errors.HandleUserErrors(c, err)
 			c.Error(err)

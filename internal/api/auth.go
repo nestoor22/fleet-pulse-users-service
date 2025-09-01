@@ -4,7 +4,6 @@ import (
 	"fleet-pulse-users-service/internal/errors"
 	"fleet-pulse-users-service/internal/schemas"
 	"fleet-pulse-users-service/internal/services"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -32,9 +31,9 @@ func LoginUserHandler(authService *services.AuthService) gin.HandlerFunc {
 		}
 
 		accessToken, refreshToken, err := authService.LoginUser(req)
-		fmt.Print(err)
 		if err != nil {
 			errors.HandleAuthErrors(ctx, err)
+			ctx.Error(err)
 			return
 		}
 		ctx.JSON(
