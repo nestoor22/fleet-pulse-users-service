@@ -11,7 +11,6 @@ import (
 
 func DatabaseConnection() *gorm.DB {
 	settings := config.Get()
-	log.Printf(settings.Database.Password)
 	sqlInfo := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		settings.Database.Host,

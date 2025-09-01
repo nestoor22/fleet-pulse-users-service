@@ -22,6 +22,16 @@ definitions:
       version:
         type: string
     type: object
+  schemas.AcceptInviteRequest:
+    properties:
+      password:
+        type: string
+      token:
+        type: string
+    required:
+    - password
+    - token
+    type: object
   schemas.CreateUserRequest:
     properties:
       email:
@@ -107,7 +117,7 @@ paths:
             $ref: '#/definitions/api.HealthResponse'
       summary: Health check endpoint
       tags:
-      - health
+      - Health
   /live:
     get:
       description: Check if the service is alive and running
@@ -120,7 +130,7 @@ paths:
             $ref: '#/definitions/api.HealthResponse'
       summary: Liveness check endpoint
       tags:
-      - health
+      - Health
   /ready:
     get:
       description: Check if the service is ready to accept requests
@@ -137,7 +147,7 @@ paths:
             $ref: '#/definitions/api.HealthResponse'
       summary: Readiness check endpoint
       tags:
-      - health
+      - Health
   /v1/login:
     post:
       consumes:
@@ -261,6 +271,40 @@ paths:
       security:
       - Bearer: []
       summary: Get Current User
+      tags:
+      - Users
+  /v1/users/invite/accept:
+    post:
+      consumes:
+      - application/json
+      description: Accept an invite and set password
+      parameters:
+      - description: Accept invite request
+        in: body
+        name: accept
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.AcceptInviteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+      summary: Accept user invite
       tags:
       - Users
 securityDefinitions:

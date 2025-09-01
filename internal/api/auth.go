@@ -2,7 +2,6 @@ package api
 
 import (
 	"fleet-pulse-users-service/internal/errors"
-	"fleet-pulse-users-service/internal/repositories"
 	"fleet-pulse-users-service/internal/schemas"
 	"fleet-pulse-users-service/internal/services"
 	"fmt"
@@ -79,9 +78,7 @@ func RefreshTokenHandler(authService *services.AuthService) gin.HandlerFunc {
 }
 
 func AddAuthRoutes(router *gin.RouterGroup, db *gorm.DB) *gin.RouterGroup {
-	userRepo := repositories.NewUserRepository(db)
-	refreshTokenRepo := repositories.NewRefreshTokenRepository(db)
-	authService := services.NewAuthService(refreshTokenRepo, userRepo)
+	authService := services.NewAuthService(db)
 
 	router.POST("/login", LoginUserHandler(authService))
 	router.POST("/refresh", RefreshTokenHandler(authService))
