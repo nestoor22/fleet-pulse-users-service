@@ -8,8 +8,7 @@ import (
 )
 
 var ErrUserNotFound = errors.New("user not found")
-var ErrEmailAlreadyExists = errors.New("user with such email already exists")
-var ErrInvalidCredentials = errors.New("invalid credentials")
+var ErrEmailAlreadyExists = errors.New("token expired")
 var ErrInvalidInviteToken = errors.New("invalid invitation")
 
 func HandleUserErrors(ctx *gin.Context, err error) {

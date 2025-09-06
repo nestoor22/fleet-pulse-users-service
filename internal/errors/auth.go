@@ -9,6 +9,7 @@ import (
 
 var ErrInvalidToken = errors.New("invalid token")
 var ErrExpiredToken = errors.New("user with such email already exists")
+var ErrInvalidCredentials = errors.New("invalid credentials")
 
 func HandleAuthErrors(ctx *gin.Context, err error) {
 	switch {
