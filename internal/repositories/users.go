@@ -28,3 +28,11 @@ func (r *UserRepository) GetUserByEmail(email string) (*models.User, error) {
 	}
 	return &u, nil
 }
+
+func (r *UserRepository) GetUsersByIDs(userIDs []uuid.UUID) ([]*models.User, error) {
+	var users []*models.User
+	if err := r.db.Where("id IN ?", userIDs).Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
+}

@@ -61,9 +61,11 @@ func (s *UserService) RegisterNewUser(data schemas.CreateUserRequest) (*models.U
 	if err != nil {
 		return nil, err
 	}
-	err = s.SendInvite(user.ID)
-	if err != nil {
-		return nil, err
+	if data.Password == "" {
+		err = s.SendInvite(user.ID)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return user, nil
 }
@@ -108,4 +110,13 @@ func (s *UserService) AcceptInvite(tokenString, password string) (*models.User, 
 		return nil, err
 	}
 	return user, nil
+}
+
+func (s *UserService) SearchUsersByIds(userIDs []uuid.UUID) ([]*models.User, error) {
+	if len(userIDs) == 0 {
+		return []*models.User{}, nil
+	}
+
+	users, err := s.repo.GetUsersByIDs(userIDs)
+	return users, err
 }

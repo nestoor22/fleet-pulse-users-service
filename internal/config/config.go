@@ -51,12 +51,12 @@ func load() *Config {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using environment variables")
 	}
-	jwtAccessTokenExpire, err := strconv.Atoi(getEnv("JWT_ACCESS_TOKEN_EXPIRE_IN_MINUTES", "5432"))
+	jwtAccessTokenExpire, err := strconv.Atoi(getEnv("JWT_ACCESS_TOKEN_EXPIRE_IN_MINUTES", "10"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	jwtRefreshTokenExpire, err := strconv.Atoi(getEnv("JWT_REFRESH_TOKEN_EXPIRE_IN_HOURS", "5432"))
+	jwtRefreshTokenExpire, err := strconv.Atoi(getEnv("JWT_REFRESH_TOKEN_EXPIRE_IN_HOURS", "72"))
 	if err != nil {
 		log.Fatal(err)
 	}

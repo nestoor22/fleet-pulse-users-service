@@ -91,6 +91,48 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/internal/users/search": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users Internal"
+                ],
+                "summary": "Search users",
+                "parameters": [
+                    {
+                        "description": "Search users payload",
+                        "name": "accept",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schemas.SearchUsersPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/schemas.UserResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/v1/login": {
             "post": {
                 "description": "Login User",
@@ -392,8 +434,7 @@ const docTemplate = `{
             "required": [
                 "email",
                 "first_name",
-                "last_name",
-                "password"
+                "last_name"
             ],
             "properties": {
                 "email": {
@@ -455,6 +496,20 @@ const docTemplate = `{
             "properties": {
                 "refresh_token": {
                     "type": "string"
+                }
+            }
+        },
+        "schemas.SearchUsersPayload": {
+            "type": "object",
+            "required": [
+                "user_ids"
+            ],
+            "properties": {
+                "user_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

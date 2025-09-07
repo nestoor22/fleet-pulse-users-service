@@ -1,5 +1,7 @@
 package schemas
 
+import "github.com/google/uuid"
+
 type CreateUserRequest struct {
 	FirstName string `json:"first_name" binding:"required"`
 	LastName  string `json:"last_name" binding:"required"`
@@ -19,4 +21,8 @@ type RefreshTokenRequest struct {
 type AcceptInviteRequest struct {
 	Token    string `json:"token" binding:"required"`
 	Password string `json:"password" binding:"required"`
+}
+
+type SearchUsersPayload struct {
+	UserIDs []uuid.UUID `json:"user_ids" binding:"required"`
 }

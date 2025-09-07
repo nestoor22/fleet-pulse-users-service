@@ -46,7 +46,6 @@ definitions:
     - email
     - first_name
     - last_name
-    - password
     type: object
   schemas.ErrorResponse:
     properties:
@@ -79,6 +78,15 @@ definitions:
         type: string
     required:
     - refresh_token
+    type: object
+  schemas.SearchUsersPayload:
+    properties:
+      user_ids:
+        items:
+          type: string
+        type: array
+    required:
+    - user_ids
     type: object
   schemas.UserResponse:
     properties:
@@ -148,6 +156,33 @@ paths:
       summary: Readiness check endpoint
       tags:
       - Health
+  /v1/internal/users/search:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Search users payload
+        in: body
+        name: accept
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.SearchUsersPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/schemas.UserResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/schemas.ErrorResponse'
+      summary: Search users
+      tags:
+      - Users Internal
   /v1/login:
     post:
       consumes:

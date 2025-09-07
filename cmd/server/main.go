@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fleet-pulse-users-service/docs"
 	"fleet-pulse-users-service/internal/api"
+	"fleet-pulse-users-service/internal/api/private"
+	"fleet-pulse-users-service/internal/api/public"
 	"fleet-pulse-users-service/internal/config"
 	"fleet-pulse-users-service/internal/db"
 	"log"
@@ -38,12 +40,15 @@ func main() {
 
 	router := gin.Default()
 	v1Group := router.Group("/v1")
+	v1InternalGroup := router.Group("/v1/internal")
 	docs.SwaggerInfo.BasePath = ""
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	api.AddHealthRoutes(router, databaseConnection)
 
-	api.AddUserRoutes(v1Group, databaseConnection)
-	api.AddAuthRoutes(v1Group, databaseConnection)
+	public.AddUserRoutes(v1Group, databaseConnection)
+	public.AddAuthRoutes(v1Group, databaseConnection)
+
+	private.AddInternalUserRoutes(v1InternalGroup, databaseConnection)
 
 	server := &http.Server{
 		Addr:    cfg.Server.Port,
